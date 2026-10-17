@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a static, GitHub-compatible isometric SVG contribution city."""
+"""Render a close-up isometric SVG city from actual GitHub contribution data."""
 import datetime as dt
 import json
 import math
@@ -8,71 +8,70 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 
 USER = "westside0106"
-QUERY = """query($login: String!) {
-  user(login: $login) {
-    contributionsCollection {
-      contributionCalendar {
-        totalContributions
-        weeks { contributionDays { date contributionCount } }
-      }
-    }
-  }
-}"""
+QUERY = """query($login:String!){user(login:$login){contributionsCollection{contributionCalendar{totalContributions weeks{contributionDays{date contributionCount}}}}}}"""
 
 def load():
-    token = os.environ["GH_TOKEN"]
     body = json.dumps({"query": QUERY, "variables": {"login": USER}}).encode()
-    req = Request("https://api.github.com/graphql", body, {
-        "Authorization": "Bearer " + token,
+    request = Request("https://api.github.com/graphql", body, {
+        "Authorization": "Bearer " + os.environ["GH_TOKEN"],
         "Content-Type": "application/json",
-        "User-Agent": "westside-profile-city"
+        "User-Agent": "westside-city",
     })
-    with urlopen(req, timeout=30) as response:
+    with urlopen(request, timeout=30) as response:
         data = json.load(response)
     if data.get("errors"):
         raise RuntimeError(str(data["errors"]))
-    cal = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]
-    weeks = cal["weeks"]
-    days = [(wi, di, day) for wi, week in enumerate(weeks)
-            for di, day in enumerate(week["contributionDays"])]
-    return cal["totalContributions"], days
+    calendar = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]
+    days = [(wi, di, d) for wi, week in enumerate(calendar["weeks"])
+            for di, d in enumerate(week["contributionDays"])]
+    return calendar["totalContributions"], days
 
-def build(total, days):
-    counts = [d["contributionCount"] for _, _, d in days]
-    maxcount = max(counts, default=1) or 1
-    out = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 420" role="img" aria-label="GitHub Contribution City">']
-    out += ['<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#0b1028"/><stop offset="1" stop-color="#050915"/></linearGradient><linearGradient id="face" x2="0" y2="1"><stop stop-color="#a35dff"/><stop offset="1" stop-color="#4214ae"/></linearGradient><linearGradient id="blue" x2="0" y2="1"><stop stop-color="#4fe6ff"/><stop offset="1" stop-color="#1448d8"/></linearGradient></defs>']
-    out += ['<rect width="1300" height="420" rx="20" fill="url(#sky)"/>']
-    out += ['<text x="30" y="44" fill="#f4f0ff" font-family="Arial,sans-serif" font-size="25" font-weight="bold">CONTRIBUTION CITY</text>']
-    out += [f'<text x="30" y="70" fill="#a99fc9" font-family="Arial,sans-serif" font-size="15">{total:,} contributions · last 12 months</text>']
-    out += ['<path d="M25 325 L1050 371 L1245 272 L217 220 Z" fill="#111435" opacity=".68"/>']
-    # Paint from back to front: one day = one building, 53 weeks x 7 days.
-    for wi, di, day in sorted(days, key=lambda v: (v[0] + v[1], v[0])):
-        count = day["contributionCount"]
-        x = 50 + wi * 20 + di * 12
-        y = 208 + di * 13 - wi * .5
-        w, depth = 13, 7
-        h = (8 + 104 * math.sqrt(count / maxcount)) if count else 3
-        top = y - h
-        main = "url(#blue)" if wi % 5 == 0 else "url(#face)"
-        opacity = ".95" if count else ".25"
-        out += [f'<g opacity="{opacity}"><path d="M{x:.1f} {top:.1f} l{depth} -4 l{w} 0 l-{depth} 4 Z" fill="#c59bff"/>']
-        out += [f'<path d="M{x:.1f} {top:.1f} l{w} 0 v{h:.1f} l-{w} 0 Z" fill="{main}"/>']
-        out += [f'<path d="M{x+w:.1f} {top:.1f} l{depth} -4 v{h:.1f} l-{depth} 4 Z" fill="#27207f"/></g>']
-    for month in (1, 3, 5, 7, 9, 11):
-        matching = [(w, d, v) for w, d, v in days if int(v["date"][5:7]) == month]
-        if matching:
-            w = matching[0][0]
-            x = 55 + w * 20
-            label = dt.date(2026, month, 1).strftime("%b")
-            out += [f'<text x="{x}" y="391" fill="#a69cbd" font-size="12" font-family="Arial,sans-serif">{label}</text>']
-    out += ['<text x="1055" y="46" fill="#ab9bc5" font-size="13" font-family="Arial,sans-serif">HEIGHT = DAILY ACTIVITY</text>']
-    out += ['<text x="1055" y="67" fill="#8c79c8" font-size="12" font-family="Arial,sans-serif">Live GitHub contributions</text>']
-    out += ['</svg>']
-    path = Path("assets/contribution-city.svg")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(out), encoding="utf-8")
+def render(total, days):
+    # Show the entire rolling year; hide empty weeks visually by using faint ground tiles.
+    weeks = max(w for w, _, _ in days) + 1
+    countmax = max((day["contributionCount"] for _, _, day in days), default=1) or 1
+    width, height = 1300, 540
+    # Fit all weeks into viewport, building footprints are closer and occupy most vertical space.
+    step = min(21, 1080 / max(weeks-1, 1))
+    ox, oy = 42, 290
+    parts = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 540" role="img" aria-label="Contribution City">']
+    parts.append("""<defs>
+<linearGradient id="bg" x2="0" y2="1"><stop stop-color="#0a1029"/><stop offset="1" stop-color="#040713"/></linearGradient>
+<linearGradient id="purple" x2="0" y2="1"><stop stop-color="#cf83ff"/><stop offset="1" stop-color="#5420c8"/></linearGradient>
+<linearGradient id="blue" x2="0" y2="1"><stop stop-color="#6deeff"/><stop offset="1" stop-color="#194aca"/></linearGradient>
+<filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5"/></filter></defs>""")
+    parts.append('<rect width="1300" height="540" rx="22" fill="url(#bg)"/>')
+    parts.append('<text x="27" y="43" font-family="Arial" font-weight="bold" font-size="23" fill="#fff">CONTRIBUTION CITY</text>')
+    parts.append(f'<text x="27" y="66" font-family="Arial" font-size="14" fill="#b7a9da">{total:,} contributions · rolling 12 months</text>')
+    parts.append('<path d="M25 310 L1115 282 L1260 375 L160 427 Z" fill="#171739" opacity=".85"/>')
+    for wi, di, d in sorted(days, key=lambda v:(v[1], v[0])):
+        amount = d["contributionCount"]
+        x = ox + wi*step + di*11
+        y = oy + di*17 - wi*.45
+        if not amount:
+            parts.append(f'<path d="M{x:.1f} {y:.1f} l10 -5 l15 0 l-10 5 Z" fill="#372967" opacity=".36"/>')
+            continue
+        h = 18 + 174 * math.sqrt(amount/countmax)
+        z = y-h
+        front = 'blue' if (wi+di)%5==0 else 'purple'
+        parts.append(f'<rect x="{x:.1f}" y="{z:.1f}" width="16" height="{h:.1f}" fill="#764cff" opacity=".24" filter="url(#glow)"/>')
+        parts.append(f'<path d="M{x:.1f} {z:.1f} l9 -5 l16 0 l-9 5 Z" fill="#dfc0ff"/>')
+        parts.append(f'<path d="M{x:.1f} {z:.1f} h16 v{h:.1f} h-16 Z" fill="url(#{front})"/>')
+        parts.append(f'<path d="M{x+16:.1f} {z:.1f} l9 -5 v{h:.1f} l-9 5 Z" fill="#26227e"/>')
+        for k in range(1, int(h//23)):
+            yy=z+k*23
+            parts.append(f'<path d="M{x+4:.1f} {yy:.1f} h8" stroke="#e8d5ff" stroke-width="1" opacity=".2"/>')
+    previous = None
+    for wi, _, d in days:
+        month = d["date"][:7]
+        if month != previous:
+            previous=month
+            x=ox+wi*step
+            parts.append(f'<text x="{x:.1f}" y="487" font-family="Arial" font-size="12" fill="#a99acb">{dt.date.fromisoformat(month+"-01").strftime("%b")}</text>')
+    parts.append('<text x="1080" y="43" fill="#ad9fcd" font-family="Arial" font-size="12">HEIGHT = ACTIVITY</text>')
+    parts.append('</svg>')
+    Path("assets").mkdir(exist_ok=True)
+    Path("assets/contribution-city.svg").write_text("\n".join(parts), encoding="utf-8")
 
 if __name__ == "__main__":
-    total, days = load()
-    build(total, days)
+    render(*load())
