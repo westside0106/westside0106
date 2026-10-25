@@ -2,7 +2,7 @@
 <defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#09132b"/><stop offset="1" stop-color="#040716"/></linearGradient><linearGradient id="violet" x2="0" y2="1"><stop stop-color="#c98cff"/><stop offset="1" stop-color="#4e22b9"/></linearGradient><linearGradient id="cyan" x2="0" y2="1"><stop stop-color="#7cefff"/><stop offset="1" stop-color="#2058d9"/></linearGradient><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter></defs>
 <rect width="1000" height="760" rx="25" fill="url(#bg)"/>
 <text x="34" y="50" font-family="Arial" font-size="28" font-weight="bold" fill="#fff">CONTRIBUTION CITY</text>
-<text x="34" y="80" font-family="Arial" font-size="17" fill="#b7a8d9">449 Beiträge · letzte 90 Tage</text>
+<text x="34" y="80" font-family="Arial" font-size="17" fill="#b7a8d9">451 Beiträge · letzte 90 Tage</text>
 <polygon points="481.0,157.8 883.0,372.2 587.0,527.6 185.0,313.2" fill="#13183b" stroke="#513c9a" stroke-width="2"/>
 <polygon points="475.0,180.0 497.0,192.0 469.0,207.0 447.0,195.0" fill="#352762" fill-opacity=".48" stroke="#604c97" stroke-opacity=".42"/>
 <polygon points="435.0,201.0 457.0,213.0 429.0,228.0 407.0,216.0" fill="#352762" fill-opacity=".48" stroke="#604c97" stroke-opacity=".42"/>
@@ -224,10 +224,13 @@
 <polygon points="647.0,341.1 675.0,326.1 675.0,456.0 647.0,471.0" fill="url(#cyan)" />
 <polygon points="675.0,326.1 697.0,338.1 697.0,468.0 675.0,456.0" fill="#2c2077" />
 <polygon points="675.0,326.1 697.0,338.1 669.0,353.1 647.0,341.1" fill="#deb7ff" />
+<polygon points="607.0,444.0 635.0,429.0 635.0,477.0 607.0,492.0" fill="url(#violet)" />
+<polygon points="635.0,429.0 657.0,441.0 657.0,489.0 635.0,477.0" fill="#2c2077" />
+<polygon points="635.0,429.0 657.0,441.0 629.0,456.0 607.0,444.0" fill="#deb7ff" />
 <text x="35" y="587" font-family="Arial" font-size="15" fill="#c5b6e0">1 Gebäude = 1 aktiver Tag · Höhe = Beiträge</text>
 <path d="M35 620H965" stroke="#30274d"/>
 <text x="35" y="650" font-family="Arial" font-size="18" font-weight="bold" fill="#f2eaff">JAHRESÜBERSICHT</text>
-<text x="965" y="650" text-anchor="end" font-family="Arial" font-size="15" fill="#c6b8e6">467 API-Beiträge · 12 Monate</text>
+<text x="965" y="650" text-anchor="end" font-family="Arial" font-size="15" fill="#c6b8e6">469 API-Beiträge · 12 Monate</text>
 <rect x="35.0" y="727.0" width="13.5" height="3.0" rx="2" fill="#242440"/>
 <rect x="52.5" y="727.0" width="13.5" height="3.0" rx="2" fill="#242440"/>
 <rect x="70.1" y="727.0" width="13.5" height="3.0" rx="2" fill="#242440"/>
@@ -280,5 +283,5 @@
 <rect x="894.8" y="716.6" width="13.5" height="13.4" rx="2" fill="#9562ff"/>
 <rect x="912.4" y="680.0" width="13.5" height="50.0" rx="2" fill="#9562ff"/>
 <rect x="929.9" y="701.4" width="13.5" height="28.6" rx="2" fill="#9562ff"/>
-<rect x="947.5" y="727.0" width="13.5" height="3.0" rx="2" fill="#242440"/>
+<rect x="947.5" y="719.7" width="13.5" height="10.3" rx="2" fill="#9562ff"/>
 </svg>
